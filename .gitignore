@@ -1,0 +1,4 @@
+unencrypted/*
+!unencrypted/.gitkeep
+package-*.json
+node_modules/
