@@ -1,26 +1,6 @@
 {
-  "name": "encrypted-web",
-  "version": "1.0.0",
-  "description": "This project exists in order to enable easy access to personal files from any endpoint.",
-  "main": "encrypt.js",
-  "scripts": {
-    "start": "node encrypt.js",
-    "rebuild-client": "npx browserify client.js -o client-browserified.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/kendlbat/encrypted-web.git"
-  },
-  "author": "Tobias Kendlbacher",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/kendlbat/encrypted-web/issues"
-  },
-  "homepage": "https://github.com/kendlbat/encrypted-web#readme",
-  "dependencies": {
-    "browserify": "^17.0.0",
-    "buffer": "^6.0.3",
-    "create-hash": "^1.2.0",
-    "crypto-browserify": "^3.12.0"
-  }
+    "scripts": {
+        "start": "node encrypt.js",
+        "genkey": "node genkey.js"
+    }
 }

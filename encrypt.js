@@ -5,23 +5,24 @@ const crypto = require('node:crypto');
 const fs = require('fs');
 const path = require('path');
 
-const pepperlen = 32;
+const baseurl = "https://vault.kendlbat.dev/"
+
 const ivlen = 12;
 
 /**
  * 
  * @param {ArrayBuffer} stream 
  * @param {string} key 
- * @returns {Promise<{data: Buffer; iv: Buffer; pepper: Buffer;}>}
+ * @returns {Promise<{data: Buffer; iv: Buffer;}>}
  */
 async function encrypt(stream, key) {
-    let pepper = Buffer.from(crypto.randomBytes(pepperlen).toString('hex')).toString();
     const iv = crypto.getRandomValues(new Uint8Array(ivlen));
 
+    const cryptkey = await convertToCryptoKey(key);
+
     return {
-        data: await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, await convertToCryptoKey(key + pepper), stream),
-        iv: Buffer.from(iv),
-        pepper: Buffer.from(pepper)
+        data: await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, cryptkey, stream),
+        iv: Buffer.from(iv)
     };
 }
 
@@ -29,11 +30,10 @@ async function encrypt(stream, key) {
  * @param {Buffer} data
  * @param {Buffer} iv
  * @param {string} key
- * @param {Buffer} pepper
  * @returns {Promise<Buffer>}
  */
-async function decrypt(data, iv, key, pepper) {
-    return Buffer.from(await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, await convertToCryptoKey(key + pepper.toString()), data));
+async function decrypt(data, iv, key) {
+    return Buffer.from(await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, await convertToCryptoKey(key), data));
 }
 
 /**
@@ -42,52 +42,56 @@ async function decrypt(data, iv, key, pepper) {
  */
 async function decryptWithMetadataExtraction(data, key) {
     let crypt = getCryptMetadata(data);
-    console.log(crypt)
-    return await decrypt(crypt.data, crypt.iv, key, crypt.pepper);
+    return await decrypt(crypt.data, crypt.iv, key);
 }
 
 /**
  * 
  * @param {Buffer} data 
  * @param {Buffer} iv 
- * @param {Buffer} pepper 
  * @returns 
  */
-function addCryptMetadata(data, iv, pepper) {
-    return Buffer.concat([iv, pepper, Buffer.from(data)]);
+function addCryptMetadata(data, iv) {
+    return Buffer.concat([iv, Buffer.from(data)]);
 }
 
 /**
  * @param {Buffer} data
- * @returns {{iv: Buffer; pepper: Buffer; data: Buffer;}}
+ * @returns {{iv: Buffer; data: Buffer;}}
  */
 function getCryptMetadata(data) {
     let iv = data.subarray(0, ivlen);
-    let pepper = data.subarray(ivlen, ivlen + 64);
-    let enc = data.subarray(ivlen + 64);
+    let enc = data.subarray(ivlen);
 
-    return {iv, pepper, data: enc};
+    return { iv, data: enc };
 }
 
 async function encryptAllDirectory(dir, key) {
+    let proms = [];
+
     for (let file of fs.readdirSync(dir)) {
         if (file.startsWith(".")) {
             console.warn("Ignoring files with . at beginning: " + file);
             continue;
         }
-        
-        let data = fs.readFileSync(path.join(dir, file));
 
-        let newloc = path.join(dir, file).replace(/^unencrypted/,"encrypted");
-
-        let crypt = await encrypt(data, key);
-
-        console.log(crypt)
-
-        let raw = addCryptMetadata(crypt.data, crypt.iv, crypt.pepper);
-        console.log(newloc)
-        fs.writeFileSync(newloc, raw);
+        proms.push(encryptFile(path.join(dir, file), key));
     }
+
+    return await Promise.allSettled(proms);
+}
+
+async function encryptFile(file, key) {
+    let data = fs.readFileSync(file);
+
+    let newloc = file.replace(/^unencrypted/, "encrypted");
+
+    let crypt = await encrypt(data, key);
+
+    let raw = addCryptMetadata(crypt.data, crypt.iv);
+    fs.writeFileSync(newloc, raw);
+
+    console.log(`URL: ${baseurl}index.html#${file.replace(/^unencrypted\//, "")}|key=${key}`)
 }
 
 /**
@@ -96,17 +100,28 @@ async function encryptAllDirectory(dir, key) {
  */
 async function convertToCryptoKey(key) {
     return await crypto.subtle.importKey(
-      "raw",
-      crypto.createHash('sha256').update(key).digest(),
-      { name: "AES-GCM", length: 256 },
-      true,
-      ["decrypt", "encrypt"]
+        "raw",
+        crypto.createHash('sha256').update(key).digest(),
+        { name: "AES-GCM", length: 256 },
+        true,
+        ["decrypt", "encrypt"]
     );
-  }
+}
 
 async function main() {
-    await encryptAllDirectory("unencrypted", "test");
-    fs.writeFileSync("testdec.txt", await decryptWithMetadataExtraction(fs.readFileSync("encrypted/test.txt.enc"), "test"))
+
+    if (process.argv.length !== 4) {
+        console.log("Usage:");
+        console.log("  node encrypt.js FILENAME_IN_UNENCRYPTED KEY");
+        console.log();
+        console.log("Use the following to generate a secure key:");
+        console.log("  npm run genkey");
+        return;
+    }
+
+    await encryptFile("unencrypted/" + process.argv[2], process.argv[3]);
+
+    //fs.writeFileSync("testdec.txt", await decryptWithMetadataExtraction(fs.readFileSync("encrypted/test.txt.enc"), "test"))
 }
 
 main();
