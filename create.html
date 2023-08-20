@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encrypt file</title>
+    <style>
+        body > * {
+            margin-bottom: 3px;
+        }
+    </style>
+</head>
+
+<body>
+    <input type="file" id="fupload" name="fupload">
+    <br>
+    <input type="text" name="keyin" id="keyin">
+    <br>
+    <button type="button" id="keygenbtn" title="512 bit random data">Generate secure key</button>
+    <br>
+    <button type="button" id="createbtn">Encrypt</button>
+    <br>
+    <div id="outputdiv" style="display: none;">
+        <textarea name="output" id="output" cols="30" rows="10"></textarea>
+        <br>
+        <button type="button" id="copyresbtn">Copy</button>
+        <button type="button" id="copykeybtn">Copy Key</button>
+        <p>Please share the key separately! (e.g.: using a different messaging app)</p>
+    </div>
+
+    <script>
+        const BASEURL = "https://vault.kendlbat.dev/";
+        const ivlen = 12;
+
+        if (!crypto) {
+            document.body.innerHTML = "<p>Your browser does not support the WebCrypto API, which is required.</p>";
+        }
+
+        async function createSHA256Hash(string) {
+            const data = new TextEncoder().encode(string);
+            return await crypto.subtle.digest('SHA-256', data);
+        }
+
+        function buf2hex(buffer) { // buffer is an ArrayBuffer
+            return [...new Uint8Array(buffer)]
+                .map(x => x.toString(16).padStart(2, '0'))
+                .join('');
+        }
+
+        /**
+        * @param {string} key
+        * @returns {crypto.CryptoKey}
+        */
+        async function convertToCryptoKey(key) {
+            return await crypto.subtle.importKey(
+                "raw",
+                (await createSHA256Hash(key)),
+                { name: "AES-GCM", length: 256 },
+                true,
+                ["decrypt", "encrypt"]
+            );
+        }
+
+        async function convertToDataURL(data, iv, mime) {
+            return await new Promise((res, rej) => {
+                let blob = new Blob([iv, data]);
+
+                let reader = new FileReader();
+
+                reader.addEventListener("loadend", () => {
+                    res(reader.result.replace(/^data:[^;]*/, "data:" + mime));
+                });
+
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        /**
+        * 
+        * @param {ArrayBuffer} stream 
+        * @param {string} key 
+        * @returns {Promise<{data: Buffer; iv: Buffer;}>}
+        */
+        async function encrypt(stream, key) {
+            const iv = crypto.getRandomValues(new Uint8Array(ivlen));
+
+            const cryptkey = await convertToCryptoKey(key);
+
+            return {
+                data: await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, cryptkey, stream),
+                iv: iv
+            };
+        }
+
+        document.querySelector("#fupload").addEventListener("change", () => {
+            // On file select
+        });
+
+        document.querySelector("#keygenbtn").addEventListener("click", () => {
+            let bytes = new Uint8Array(64);
+            crypto.getRandomValues(bytes);
+            document.querySelector("#keyin").value = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+
+        });
+
+        document.querySelector("#createbtn").addEventListener("click", async () => {
+            const filesel = document.querySelector("#fupload");
+            const file = filesel.files[0];
+            console.log(file);
+
+            let key = document.querySelector("#keyin").value;
+
+            if (key.length <= 6) {
+                alert("Refusing to encrypt with too short key. Please try again.");
+                return;
+            }
+
+            const fr = new FileReader();
+
+            fr.addEventListener("loadend", async (e) => {
+                console.log(fr.result);
+
+                let crypt = await encrypt(fr.result, key);
+
+                console.log(buf2hex(crypt.data));
+                console.log(buf2hex(crypt.iv));
+
+                let dataurl = await convertToDataURL(crypt.data, crypt.iv, file.type);
+
+                document.querySelector("#output").value = `${BASEURL}#dataurl|${dataurl}`;
+                document.querySelector("#outputdiv").style.display = "inline-block";
+
+            });
+
+            fr.readAsArrayBuffer(file);
+        });
+
+        document.querySelector("#copyresbtn").addEventListener("click", () => {
+            document.querySelector("#output").select();
+            document.execCommand('copy');
+        });
+
+        document.querySelector("#copykeybtn").addEventListener("click", () => {
+            document.querySelector("#keyin").select();
+            document.execCommand('copy');
+        });
+    </script>
+</body>
+
+</html>
