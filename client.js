@@ -80,11 +80,35 @@ async function reloadHash() {
     let key = hash.split("|key=")[1];
 
     if (!key) {
-        document.body.innerText = "No key specified.";
-        return;
+        document.body.innerHTML = "<p style='margin-bottom: 4px;'>Enter key:</p>";
+        const keyin = document.createElement("input");
+        keyin.type = "text";
+        document.body.appendChild(keyin);
+        document.body.appendChild(document.createElement("br"));
+        const keysubmitbtn = document.createElement("button");
+        keysubmitbtn.type = "button";
+        keysubmitbtn.innerText = "Decrypt"
+        keysubmitbtn.style.marginTop = "4px";
+        document.body.appendChild(keysubmitbtn);
+
+        key = await new Promise((res, rej) => {
+            let onsubm = () => {
+                res(keyin.value);
+            }
+
+            keysubmitbtn.addEventListener("click", onsubm);
+            keyin.addEventListener("submit", onsubm);
+        });
+
+        document.body.innerHTML = "";
     }
 
-    let res = await fetch("encrypted/" + page);
+    let res;
+
+    if (page.startsWith("dataurl|"))
+        res = await fetch(page.replace(/^dataurl\|/, ""))
+    else
+        res = await fetch("encrypted/" + page);
 
     if (res.status != 200) {
         document.body.innerText = "An error occurred";
@@ -101,11 +125,11 @@ async function reloadHash() {
     data = await decrypt(crypt.data, crypt.iv, key);
 
     if (data === undefined) {
-        document.body.innerText = "The file was not able to be decrypted.";
+        document.body.innerHTML = "<p>The file was not able to be decrypted.</p><button onclick='window.location.reload();'>Retry</button>";
         return;
     }
 
-    data = new Blob([ data ]);
+    data = new Blob([data]);
 
     let reader = new FileReader();
 
