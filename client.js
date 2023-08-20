@@ -77,7 +77,7 @@ async function reloadHash() {
 
     let hash = window.location.hash.replace(/^#/, "");
     let page = decodeURIComponent(hash.split("~~key=")[0]);
-    let key = decodeURIComponent(hash.split("~~key=")[1]);
+    let key = hash.split("~~key=")[1];
 
     if (!key) {
         document.body.innerHTML = "<p style='margin-bottom: 4px;'>Enter key:</p>";
@@ -101,6 +101,8 @@ async function reloadHash() {
         });
 
         document.body.innerHTML = "";
+    } else {
+        key = decodeURIComponent(key);
     }
 
     let res;
