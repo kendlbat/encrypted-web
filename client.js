@@ -76,8 +76,8 @@ async function reloadHash() {
     }
 
     let hash = window.location.hash.replace(/^#/, "");
-    let page = hash.split("|key=")[0];
-    let key = hash.split("|key=")[1];
+    let page = decodeURIComponent(hash.split("~~key=")[0]);
+    let key = decodeURIComponent(hash.split("~~key=")[1]);
 
     if (!key) {
         document.body.innerHTML = "<p style='margin-bottom: 4px;'>Enter key:</p>";
@@ -105,12 +105,12 @@ async function reloadHash() {
 
     let res;
 
-    if (page.startsWith("dataurl|"))
-        res = await fetch(page.replace(/^dataurl\|/, ""))
+    if (page.startsWith("dataurl~~"))
+        res = await fetch(page.replace(/^dataurl~~/, ""))
     else
         res = await fetch("encrypted/" + page);
 
-    if (res.status != 200) {
+    if (res.status >= 400) {
         document.body.innerText = "An error occurred";
         return;
     }
@@ -134,9 +134,19 @@ async function reloadHash() {
     let reader = new FileReader();
 
     reader.addEventListener("loadend", () => {
-        let iframe = document.createElement("iframe");
-        iframe.src = `data:${mime};base64,${reader.result.split(",", 2)[1]}`;
-        document.body.appendChild(iframe);
+        if (mime !== "application/octet-stream") {
+            let iframe = document.createElement("iframe");
+            iframe.src = `data:${mime};base64,${reader.result.split(",", 2)[1]}`;
+            document.body.appendChild(iframe);
+        } else {
+            let link = document.createElement("a");
+            link.download = "decrypted-by-vault.kendlbat.dev";
+            link.href = uri;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            delete link;
+        }
     });
 
     reader.readAsDataURL(data);
