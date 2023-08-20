@@ -128,7 +128,7 @@
 
                 let dataurl = await convertToDataURL(crypt.data, crypt.iv, file.type);
 
-                document.querySelector("#output").value = `${BASEURL}#dataurl|${dataurl}`;
+                document.querySelector("#output").value = `${BASEURL}#dataurl~~${encodeURIComponent(dataurl)}`;
                 document.querySelector("#outputdiv").style.display = "inline-block";
 
             });

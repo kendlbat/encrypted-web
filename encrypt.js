@@ -91,7 +91,7 @@ async function encryptFile(file, key) {
     let raw = addCryptMetadata(crypt.data, crypt.iv);
     fs.writeFileSync(newloc, raw);
 
-    console.log(`URL: ${baseurl}index.html#${file.replace(/^unencrypted\//, "")}|key=${key}`)
+    console.log(`URL: ${baseurl}index.html#${file.replace(/^unencrypted\//, "")}~~key=${encodeURIComponent(key)}`)
 }
 
 /**
