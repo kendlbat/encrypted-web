@@ -65,13 +65,13 @@ async function decrypt(data, iv, key) {
 }
 
 async function reloadHash() {
+    let hash = document.querySelector("#in").value.split("#", 2)[1];
     document.body.innerHTML = "";
 
     if (!crypto) {
         document.body.innerText = "Crypto library not available. This page is not able to function in a browser without webcrypto capabilities.";
         return;
     }
-    let hash = document.querySelector("#in").value.split("#", 2)[1];
 
     if (!document.querySelector("#in").value || !hash) {
         document.body.innerHTML = "<p>No page specified. Maybe you are looking for: <a href='create.html'>encrypting your own files</a></p>";
