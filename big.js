@@ -73,7 +73,7 @@ async function reloadHash() {
         return;
     }
 
-    if (!document.querySelector("#in").value || !hash) {
+    if (!hash) {
         document.body.innerHTML = "<p>No page specified. Maybe you are looking for: <a href='create.html'>encrypting your own files</a></p>";
         return;
     }
