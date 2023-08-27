@@ -71,7 +71,7 @@ async function reloadHash() {
     }
 
     if (!window.location.hash) {
-        document.body.innerHTML = "<p>No page specified. Maybe you are looking for: <a href='create.html'>encrypting your own files</a></p>";
+        document.body.innerHTML = "<p>No page specified. Maybe you are looking for: <a href='create.html'>encrypting your own files</a> or <a href='text.html'>encrypting plain text</a></p>";
         return;
     }
 
