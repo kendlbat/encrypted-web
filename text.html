@@ -114,7 +114,7 @@
             console.log(buf2hex(crypt.data));
             console.log(buf2hex(crypt.iv));
 
-            let dataurl = await convertToDataURL(crypt.data, crypt.iv, file.type);
+            let dataurl = await convertToDataURL(crypt.data, crypt.iv, "text/plain");
 
             document.querySelector("#output").value = `${BASEURL}#dataurl~~${encodeURIComponent(dataurl)}`;
             document.querySelector("#outputdiv").style.display = "inline-block";
