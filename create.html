@@ -154,9 +154,9 @@
             }
 
             navigator.share({
-                url: document.querySelector("#output").value,
+                url: "https://vault.kendlbat.dev/big",
                 title: "Data encrypted using https://vault.kendlbat.dev/",
-                text: "Decrypt data at https://vault.kendlbat.dev/big"
+                text: document.querySelector("#output").value
             });
         })
     </script>
