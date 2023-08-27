@@ -109,8 +109,6 @@
                 return;
             }
 
-            console.log(fr.result);
-
             let crypt = await encrypt(new TextEncoder().encode(document.querySelector("#textin").value), key);
 
             console.log(buf2hex(crypt.data));
