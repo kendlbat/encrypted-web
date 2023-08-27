@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Encrypt file</title>
+    <title>Encrypt text</title>
     <style>
         body>* {
             margin-bottom: 3px;
@@ -93,10 +93,6 @@
                 iv: iv
             };
         }
-
-        document.querySelector("#fupload").addEventListener("change", () => {
-            // On file select
-        });
 
         document.querySelector("#keygenbtn").addEventListener("click", () => {
             let bytes = new Uint8Array(64);
