@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Encrypt file</title>
     <style>
-        body > * {
+        body>* {
             margin-bottom: 3px;
         }
     </style>
@@ -26,6 +26,7 @@
         <br>
         <button type="button" id="copyresbtn">Copy</button>
         <button type="button" id="copykeybtn">Copy Key</button>
+        <button type="button" id="shareresbtn">Share</button>
         <p>Please share the key separately! (e.g.: using a different messaging app)</p>
     </div>
 
@@ -145,6 +146,19 @@
             document.querySelector("#keyin").select();
             document.execCommand('copy');
         });
+
+        document.querySelector("#shareresbtn").addEventListener("click", () => {
+            if (!navigator.share) {
+                alert("Your browser does not support this feature.");
+                return;
+            }
+
+            navigator.share({
+                url: document.querySelector("#output").value,
+                title: "Data encrypted using https://vault.kendlbat.dev/",
+                text: "Decrypt data at https://vault.kendlbat.dev/big"
+            });
+        })
     </script>
 </body>
 
