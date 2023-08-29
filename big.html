@@ -16,9 +16,15 @@
     </style>
 </head>
 <body>
-    <label for="in">Paste URL:</label><br>
-    <textarea name="in" id="in" cols="30" rows="10"></textarea><br>
-    <button type="button" id="decbtn">Decrypt</button>
+    <button type="button" id="modeswitcher">Switch to file mode</button><br>
+    <div id="urlmode">
+        <label for="in">Paste URL:</label><br>
+        <textarea name="in" id="in" cols="30" rows="10"></textarea><br>
+        <button type="button" id="decbtn">Decrypt</button>
+    </div>
+    <div id="filemode">
+        <input type="file" name="filein" id="filein">
+    </div>
     <script src="big.js"></script>
 </body>
 </html>

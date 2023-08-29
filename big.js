@@ -64,8 +64,14 @@ async function decrypt(data, iv, key) {
     }
 }
 
-async function reloadHash() {
-    let hash = document.querySelector("#in").value.split("#", 2)[1];
+async function reloadHash(hashoverride) {
+    let hash;
+    if (hashoverride) {
+        hash = hashoverride;
+    } else {
+        hash = document.querySelector("#in").value.split("#", 2)[1];
+    }
+
     document.body.innerHTML = "";
 
     if (!crypto) {
@@ -77,7 +83,7 @@ async function reloadHash() {
         document.body.innerHTML = "<p>No page specified. Maybe you are looking for: <a href='create.html'>encrypting your own files</a></p>";
         return;
     }
-    
+
     let page = decodeURIComponent(hash.split("~~key=")[0]);
     let key = hash.split("~~key=")[1];
 
@@ -154,8 +160,33 @@ async function reloadHash() {
     });
 
     reader.readAsDataURL(data);
-
-
 }
 
+let mode = "url";
+
 document.querySelector("#decbtn").addEventListener("click", () => reloadHash());
+
+document.querySelector("#modeswitcher").addEventListener("click", () => {
+    let btn = document.querySelector("#modeswitcher");
+
+    if (mode === "url") {
+        mode = "file";
+        btn.innerText = "Switch to URL mode";
+        document.querySelector("#urlmode").style.display = "none";
+        document.querySelector("#filemode").style.display = "block";
+    } else {
+        mode = "url";
+        btn.innerText = "Switch to file mode";
+        document.querySelector("#urlmode").style.display = "block";
+        document.querySelector("#filemode").style.display = "none";
+    }
+});
+
+document.querySelector("#filein").addEventListener("change", () => {
+    // Read file as text/plain
+    let reader = new FileReader();
+    reader.addEventListener("loadend", () => {
+        reloadHash(reader.result.split("#", 2)[1]);
+    });
+    reader.readAsText(document.querySelector("#filein").files[0]);
+});

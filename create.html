@@ -27,12 +27,15 @@
         <button type="button" id="copyresbtn">Copy</button>
         <button type="button" id="copykeybtn">Copy Key</button>
         <button type="button" id="shareresbtn">Share</button>
+        <button type="button" id="downloadbtn">Download encrypted file</button>
         <p>Please share the key separately! (e.g.: using a different messaging app)</p>
     </div>
 
     <script>
         const BASEURL = "https://vault.kendlbat.dev/";
         const ivlen = 12;
+
+        let currfilename = "";
 
         if (!crypto) {
             document.body.innerHTML = "<p>Your browser does not support the WebCrypto API, which is required.</p>";
@@ -106,9 +109,14 @@
         });
 
         document.querySelector("#createbtn").addEventListener("click", async () => {
+            /**
+             * @type {HTMLInputElement}
+             */
             const filesel = document.querySelector("#fupload");
             const file = filesel.files[0];
             console.log(file);
+            currfilename = file.name;
+            
 
             let key = document.querySelector("#keyin").value;
 
@@ -157,7 +165,15 @@
                 title: "Data encrypted using https://vault.kendlbat.dev/",
                 text: "Decrypt at https://vault.kendlbat.dev/big\n" + document.querySelector("#output").value
             });
-        })
+        });
+
+        document.querySelector("#downloadbtn").addEventListener("click", () => {
+            let dataurl = document.querySelector("#output").value.replace(/\n/g, "");
+            let a = document.createElement("a");
+            a.href = "data:text/plain," + encodeURIComponent(dataurl);
+            a.download = currfilename + ".kendlcrypt";
+            a.click();
+        });
     </script>
 </body>
 
